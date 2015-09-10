@@ -68,7 +68,7 @@
 				<configuration>
 					<instructions>
 						<Bundle-SymbolicName>org.pmw.${project.artifactId}; singleton:=true</Bundle-SymbolicName>
-						<Export-Package>org.pmw.tinylog, org.pmw.tinylog.labelers, org.pmw.tinylog.policies, org.pmw.tinylog.writers</Export-Package>
+						<Export-Package>org.pmw.tinylog, org.pmw.tinylog.labelers, org.pmw.tinylog.policies, org.pmw.tinylog.writers, org.pmw.tinylog.plugins</Export-Package>
 					</instructions>
 				</configuration>
 				<executions>
