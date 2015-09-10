@@ -18,6 +18,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Set;
 
+import org.pmw.tinylog.plugins.StackTraceElementProvider;
 import org.pmw.tinylog.writers.LogEntryValue;
 import org.pmw.tinylog.writers.Writer;
 
@@ -40,6 +41,8 @@ public final class Logger {
 
 	private static Method stackTraceMethod;
 	private static boolean hasSunReflection;
+	
+	private static StackTraceElementProvider customStackTraceProvider = null;
 
 	static {
 		Configurator.init().activate();
@@ -485,7 +488,7 @@ public final class Logger {
 	 * @throws Exception
 	 *             Failed to initialize the writer
 	 */
-	static void setConfirguration(final Configuration configuration) throws Exception {
+	static void setConfiguration(final Configuration configuration) throws Exception {
 		Configuration previousConfiguration = Logger.configuration;
 
 		if (previousConfiguration == null) {
@@ -796,6 +799,12 @@ public final class Logger {
 
 	@SuppressWarnings({ "deprecation", "restriction" })
 	private static StackTraceElement getStackTraceElement(final int deep, final boolean onlyClassName) {
+		if (customStackTraceProvider != null) {
+			// depth is increased here, as this is an additional level of call stack
+			StackTraceElement element = customStackTraceProvider.getStackTraceElement(deep+1, onlyClassName);
+			if (element != null) return element;
+		}
+		
 		if (onlyClassName && hasSunReflection) {
 			try {
 				return new StackTraceElement(sun.reflect.Reflection.getCallerClass(deep + 1).getName(), "<unknown>", "<unknown>", -1);
