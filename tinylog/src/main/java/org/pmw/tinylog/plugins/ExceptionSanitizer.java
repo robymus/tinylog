@@ -13,7 +13,7 @@ package org.pmw.tinylog.plugins;
 /**
  * Interface for customized plugins sanitizing exception stack traces
  * 
- * @author Robert Elek <r@r2.io>
+ * @author r@r2.io
  */
 public interface ExceptionSanitizer {
 

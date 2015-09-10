@@ -14,7 +14,7 @@ package org.pmw.tinylog.plugins;
  * Wrapper class to contain all plugins in a configuration.
  * This way it is a single extension point when new interfaces are added.
  * 
- * @author Robert Elek <r@r2.io>
+ * @author r@r2.io
  */
 public class Plugins {
 
@@ -91,6 +91,7 @@ public class Plugins {
 	
 	/**
 	 * Copies this object
+	 * @return a copy of this object
 	 */
 	public Plugins copy() {
 		return new Plugins(this);

@@ -15,7 +15,7 @@ package org.pmw.tinylog.plugins;
  * To chain more than two instances, several instances have to be created, thus leading to decreased performance.
  * This is probably acceptable, as using more than two plugins of the same type at the same time is not probable. 
  * 
- * @author Robert Elek <r@r2.io>
+ * @author r@r2.io
  */
 public class ChainedExceptionSanitizer implements ExceptionSanitizer {
 
