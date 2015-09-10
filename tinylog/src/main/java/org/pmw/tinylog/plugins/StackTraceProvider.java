@@ -15,12 +15,15 @@ package org.pmw.tinylog.plugins;
  * 
  * @author Robert Elek <r@r2.io>
  */
-public interface StackTraceElementProvider {
+public interface StackTraceProvider {
 
 	/**
 	 * This method should return the stack trace element at depth specified in the parameter
-	 * @param depth the depth where the important information is (and should be retrieved)
-	 * @param onlyClassName if true, only class name is used in the StackTraceElement, so optimized retrieval may be used 
+	 * 
+	 * @param depth 
+	 *            the depth where the important information is (and should be retrieved)
+	 * @param onlyClassName 
+	 *            if true, only class name is used in the StackTraceElement, so optimized retrieval may be used 
 	 * @return when returning null, the original logic will continue processing
 	 */
 	public StackTraceElement getStackTraceElement(final int depth, final boolean onlyClassName);

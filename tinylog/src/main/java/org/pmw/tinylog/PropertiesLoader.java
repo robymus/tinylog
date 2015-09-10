@@ -97,6 +97,12 @@ final class PropertiesLoader {
 	 */
 	static final String CUSTOM_LEVEL_PREFIX = LEVEL_PROPERTY + "@";
 
+	/**
+	 * Name of property for plugin
+	 */
+	static final String PLUGIN_PROPERTY = TINYLOG_PREFIX + ".plugin";
+	
+	
 	private PropertiesLoader() {
 	}
 
@@ -115,6 +121,7 @@ final class PropertiesLoader {
 		readMaxStackTraceElements(configurator, properties);
 		readWriters(configurator, properties);
 		readWritingThread(configurator, properties);
+		readPlugins(configurator, properties);
 		return configurator;
 	}
 
@@ -284,6 +291,40 @@ final class PropertiesLoader {
 		}
 	}
 
+	/**
+	 * Load plugins from properties.
+	 *
+	 * @param configurator
+	 *            Configurator to update
+	 * @param properties
+	 *            Properties with configuration
+	 */
+	static void readPlugins(final Configurator configurator, final Properties properties) {
+		Set<String> pluginProperties = new TreeSet<>(); // Sorted
+		for (Object key : properties.keySet()) {
+			String propertyName = (String) key;
+			if (propertyName.startsWith(PLUGIN_PROPERTY) && propertyName.indexOf('.', PLUGIN_PROPERTY.length()) == -1) {
+				pluginProperties.add(propertyName);
+			}
+		}
+
+		for (String propertyName : pluginProperties) {
+			String pluginClass = properties.getProperty(propertyName);
+			if (pluginClass != null && pluginClass.length() > 0 && !pluginClass.equalsIgnoreCase("null")) {
+				// try to instantiate plugin class and add
+				try {
+					Class<?> clazz = Class.forName(pluginClass);
+					configurator.addPlugin(clazz.newInstance());
+				}
+				catch (Exception ex) {
+					InternalLogger.error(ex, "Failed to create an instance of \"{}\"", pluginClass);
+				}
+					
+			}
+		}
+	}
+	
+	
 	private static void setWriter(final Configurator configurator, final Writer writer, final Level level, final String formatPattern) {
 		if (level == null) {
 			if (formatPattern == null) {

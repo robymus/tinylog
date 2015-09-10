@@ -28,6 +28,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 
+import org.pmw.tinylog.plugins.Plugins;
 import org.pmw.tinylog.writers.ConsoleWriter;
 import org.pmw.tinylog.writers.Writer;
 
@@ -50,6 +51,7 @@ public final class Configurator {
 	private final List<WriterDefinition> writers;
 	private WritingThreadData writingThreadData;
 	private Integer maxStackTraceElements;
+	private Plugins plugins;
 
 	/**
 	 * @param level
@@ -68,7 +70,7 @@ public final class Configurator {
 	 *            Limit of stack traces for exceptions
 	 */
 	Configurator(final Level level, final Map<String, Level> customLevels, final String formatPattern, final Locale locale,
-			final List<WriterDefinition> writers, final WritingThreadData writingThreadData, final Integer maxStackTraceElements) {
+			final List<WriterDefinition> writers, final WritingThreadData writingThreadData, final Integer maxStackTraceElements, final Plugins plugins) {
 		this.level = level;
 		this.customLevels = new HashMap<>(customLevels);
 		this.formatPattern = formatPattern;
@@ -76,8 +78,18 @@ public final class Configurator {
 		this.writers = new ArrayList<>(writers);
 		this.writingThreadData = writingThreadData;
 		this.maxStackTraceElements = maxStackTraceElements;
+		this.plugins = plugins;
 	}
 
+	/**
+	 * This constructor is kept for compatibility with older version (without plugin support)
+	 */
+	Configurator(final Level level, final Map<String, Level> customLevels, final String formatPattern, final Locale locale,
+			final List<WriterDefinition> writers, final WritingThreadData writingThreadData, final Integer maxStackTraceElements) {
+		this(level, customLevels, formatPattern, locale, writers, writingThreadData, maxStackTraceElements, new Plugins());
+	}
+	
+	
 	/**
 	 * Create a new configurator, based on the default configuration.
 	 *
@@ -85,7 +97,7 @@ public final class Configurator {
 	 */
 	public static Configurator defaultConfig() {
 		return new Configurator(null, Collections.<String, Level> emptyMap(), null, Locale.getDefault(),
-				Collections.<WriterDefinition> singletonList(new WriterDefinition(new ConsoleWriter())), null, null);
+				Collections.<WriterDefinition> singletonList(new WriterDefinition(new ConsoleWriter())), null, null, new Plugins());
 	}
 
 	/**
@@ -517,6 +529,28 @@ public final class Configurator {
 	}
 
 	/**
+	 * Activates a new plugin. The plugin should implement one of the plugin interfaces.
+	 * 
+	 * @param o
+	 *            The instance of the plugin to activate
+	 * @return The current configurator
+	 */
+	public Configurator addPlugin(final Object o) {
+		plugins.addPlugin(o);
+		return this;
+	}
+	
+	/**
+	 * Removes all plugins from plugin list.
+	 * 
+	 * @return The current configurator
+	 */
+	public Configurator removeAllPlugins() {
+		plugins.clear();
+		return this;
+	}
+
+	/**
 	 * Activate the configuration.
 	 *
 	 * @return <code>true</code> if the configuration has been successfully activated, <code>false</code> if the
@@ -664,7 +698,8 @@ public final class Configurator {
 	Configurator copy() {
 		WritingThreadData writingThreadDataCopy = writingThreadData == null ? null : new WritingThreadData(writingThreadData.threadToObserve,
 				writingThreadData.priority);
-		return new Configurator(level, customLevels, formatPattern, locale, writers, writingThreadDataCopy, maxStackTraceElements);
+		Plugins pluginsCopy = plugins.copy();
+		return new Configurator(level, customLevels, formatPattern, locale, writers, writingThreadDataCopy, maxStackTraceElements, pluginsCopy);
 	}
 
 	/**
@@ -687,7 +722,7 @@ public final class Configurator {
 		}
 
 		return new Configuration(configurator, configurator.level, configurator.customLevels, configurator.formatPattern, configurator.locale,
-				configurator.writers, writingThread, configurator.maxStackTraceElements);
+				configurator.writers, writingThread, configurator.maxStackTraceElements, configurator.plugins);
 	}
 
 	/**

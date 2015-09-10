@@ -175,6 +175,10 @@ abstract class ConfigurationObserver extends Thread {
 						}
 						PropertiesLoader.readWritingThread(configurator, properties);
 					}
+					if (pluginHasChanged(properties, oldProperties)) {
+						configurator.removeAllPlugins();
+						PropertiesLoader.readPlugins(configurator, properties);
+					}					
 				}
 				configurator.activate();
 				oldConfigurator = configurator;
@@ -275,6 +279,10 @@ abstract class ConfigurationObserver extends Thread {
 				PropertiesLoader.WRITING_THREAD_PRIORITY_PROPERTY), Collections.<String> emptyList());
 	}
 
+	private static boolean pluginHasChanged(final Properties properties, final Properties oldProperties) {
+		return compare(properties, oldProperties, Collections.<String> emptyList(), Collections.singletonList(PropertiesLoader.PLUGIN_PROPERTY));
+	}	
+	
 	private static boolean compare(final Properties a, final Properties b, final List<String> fullKeys, final List<String> startPatterns) {
 		Properties relevantA = extract(a, fullKeys, startPatterns);
 		Properties relevantB = extract(b, fullKeys, startPatterns);

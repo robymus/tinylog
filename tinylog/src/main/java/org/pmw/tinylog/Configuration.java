@@ -25,6 +25,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.pmw.tinylog.Configurator.WritingThreadData;
+import org.pmw.tinylog.plugins.Plugins;
 import org.pmw.tinylog.writers.LogEntryValue;
 import org.pmw.tinylog.writers.Writer;
 
@@ -49,12 +50,13 @@ public final class Configuration {
 	private final List<Writer> writers;
 	private final WritingThread writingThread;
 	private final int maxStackTraceElements;
+	private final Plugins plugins;
 
 	private final Map<Level, Writer[]> effectiveWriters;
 	private final Map<Level, List<Token>[]> effectiveFormatTokens;
 	private final Map<Level, Set<LogEntryValue>> requiredLogEntryValues;
-	private final Map<Level, StackTraceInformation> requiredStackTraceInformation;
-
+	private final Map<Level, StackTraceInformation> requiredStackTraceInformation;	
+	
 	/**
 	 * @param configurator
 	 *            Copy of based configurator
@@ -72,9 +74,11 @@ public final class Configuration {
 	 *            Writing thread (can be <code>null</code> to write log entries synchronously)
 	 * @param maxStackTraceElements
 	 *            Limit of stack traces for exceptions
+	 * @param plugins
+	 *            Activated plugins (must not be null)
 	 */
 	Configuration(final Configurator configurator, final Level level, final Map<String, Level> customLevels, final String formatPattern, final Locale locale,
-			final List<WriterDefinition> writerDefinitions, final WritingThread writingThread, final Integer maxStackTraceElements) {
+			final List<WriterDefinition> writerDefinitions, final WritingThread writingThread, final Integer maxStackTraceElements, final Plugins plugins) {
 		this.configurator = configurator;
 
 		this.level = level == null ? getLevel(writerDefinitions) : level;
@@ -86,6 +90,7 @@ public final class Configuration {
 		this.writers = getWriters(writerDefinitions);
 		this.writingThread = writingThread;
 		this.maxStackTraceElements = maxStackTraceElements == null ? DEFAULT_MAX_STACK_TRACE_ELEMENTS : maxStackTraceElements;
+		this.plugins = plugins;
 
 		this.effectiveWriters = getEffectiveWriters(writerDefinitions);
 		this.effectiveFormatTokens = getEffectiveFormatTokens(writerDefinitions, this.formatPattern, this.locale, this.maxStackTraceElements);
@@ -93,6 +98,15 @@ public final class Configuration {
 		this.requiredStackTraceInformation = getRequiredStackTraceInformation(requiredLogEntryValues, customLevels);
 	}
 
+	/**
+	 * This constructor is kept for compatibility with older version (without plugin support)
+	 */
+	Configuration(final Configurator configurator, final Level level, final Map<String, Level> customLevels, final String formatPattern, final Locale locale,
+			final List<WriterDefinition> writerDefinitions, final WritingThread writingThread, final Integer maxStackTraceElements) {
+		this(configurator, level, customLevels, formatPattern, locale, writerDefinitions, writingThread, maxStackTraceElements, new Plugins());
+	}
+	
+	
 	/**
 	 * Get the global severity level.
 	 *
@@ -181,6 +195,15 @@ public final class Configuration {
 	}
 
 	/**
+	 * Gets the active plugins
+	 * 
+	 * @return Plugins object with active plugins
+	 */
+	public Plugins getPlugins() {
+		return plugins;
+	}
+	
+	/**
 	 * Get a new configurator, based on this configuration.
 	 * @return New configurator
 	 */
@@ -263,7 +286,7 @@ public final class Configuration {
 			writingThreadData = new WritingThreadData(writingThread.getNameOfThreadToObserve(), writingThread.getPriority());
 		}
 
-		return new Configurator(level, copyOfCustomLevels, formatPattern, locale, writerDefinitions, writingThreadData, maxStackTraceElements);
+		return new Configurator(level, copyOfCustomLevels, formatPattern, locale, writerDefinitions, writingThreadData, maxStackTraceElements, plugins.copy());
 	}
 
 	private static Level getLevel(final List<WriterDefinition> definitions) {

@@ -18,7 +18,9 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Set;
 
-import org.pmw.tinylog.plugins.StackTraceElementProvider;
+import org.pmw.tinylog.plugins.ExceptionSanitizer;
+import org.pmw.tinylog.plugins.Plugins;
+import org.pmw.tinylog.plugins.StackTraceProvider;
 import org.pmw.tinylog.writers.LogEntryValue;
 import org.pmw.tinylog.writers.Writer;
 
@@ -41,8 +43,9 @@ public final class Logger {
 
 	private static Method stackTraceMethod;
 	private static boolean hasSunReflection;
-	
-	private static StackTraceElementProvider customStackTraceProvider = null;
+
+	private static Plugins plugins = configuration.getPlugins();
+	private static StackTraceProvider customStackTraceProvider = null;
 
 	static {
 		Configurator.init().activate();
@@ -506,7 +509,10 @@ public final class Logger {
 			}
 		}
 
-		Logger.configuration = configuration;
+		Logger.configuration = configuration;		
+		Logger.plugins = configuration.getPlugins();
+		// the custom StackTraceProvider is stored in a directly accessible variable to avoid performance penalty
+		customStackTraceProvider = configuration.getPlugins().getStackTraceProvider();
 	}
 
 	/**
@@ -707,7 +713,7 @@ public final class Logger {
 	}
 
 	private static LogEntry[] createLogEntries(final Configuration currentConfiguration, final int strackTraceDeep, final Level level,
-			final StackTraceElement createdStackTraceElement, final Throwable exception, final Object message, final Object[] arguments) {
+			final StackTraceElement createdStackTraceElement, final Throwable inException, final Object message, final Object[] arguments) {
 		Set<LogEntryValue> requiredLogEntryValues = currentConfiguration.getRequiredLogEntryValues(level);
 		List<Token>[] formatTokens = currentConfiguration.getEffectiveFormatTokens(level);
 		LogEntry[] entries = new LogEntry[formatTokens.length];
@@ -721,7 +727,14 @@ public final class Logger {
 		String filename = null;
 		int line = -1;
 		String renderedMessage = null;
+		Throwable exception = inException;
 
+		// apply plugin to sanitize exception if needed
+		if (exception != null) {
+			ExceptionSanitizer sanitizer = Logger.plugins.getExceptionSanitizer();
+			if (sanitizer != null) exception = sanitizer.sanitizeException(exception);
+		}
+		
 		for (LogEntryValue logEntryValue : requiredLogEntryValues) {
 			switch (logEntryValue) {
 				case DATE:

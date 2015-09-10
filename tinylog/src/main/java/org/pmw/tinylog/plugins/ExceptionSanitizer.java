@@ -19,7 +19,9 @@ public interface ExceptionSanitizer {
 
 	/**
 	 * This method should return the stack trace element at depth specified in the parameter
-	 * @param exception the Throwable for which stack trace should be sanitized
+	 * 
+	 * @param exception 
+	 *            the Throwable for which stack trace should be sanitized
 	 * @return a Throwable with potentially modified StackTrace
 	 */
 	public Throwable sanitizeException(final Throwable exception);
