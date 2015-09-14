@@ -532,11 +532,21 @@ public final class Configurator {
 	 * Activates a new plugin. The plugin should implement one of the plugin interfaces.
 	 * 
 	 * @param o
-	 *            The instance of the plugin to activate
+	 *            The instance of the plugin to activate. If the parameter is a class, it will be instantiated by addPlugin method.
 	 * @return The current configurator
 	 */
 	public Configurator addPlugin(final Object o) {
-		plugins.addPlugin(o);
+		if (o instanceof Class<?>) {
+			Class<?> clazz = (Class<?>) o;
+			try {
+				plugins.addPlugin(clazz.newInstance());
+			} catch (InstantiationException | IllegalAccessException ex) {
+				InternalLogger.error(ex, "Failed to instantiate plugin");
+			}
+		}
+		else {
+			plugins.addPlugin(o);
+		}
 		return this;
 	}
 	

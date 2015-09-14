@@ -311,13 +311,13 @@ final class PropertiesLoader {
 		for (String propertyName : pluginProperties) {
 			String pluginClass = properties.getProperty(propertyName);
 			if (pluginClass != null && pluginClass.length() > 0 && !pluginClass.equalsIgnoreCase("null")) {
-				// try to instantiate plugin class and add
+				// try to find class by name and add as plugin
 				try {
 					Class<?> clazz = Class.forName(pluginClass);
-					configurator.addPlugin(clazz.newInstance());
+					configurator.addPlugin(clazz);
 				}
 				catch (Exception ex) {
-					InternalLogger.error(ex, "Failed to create an instance of \"{}\"", pluginClass);
+					InternalLogger.error(ex, "Failed to find plugin class \"{}\"", pluginClass);
 				}
 					
 			}
